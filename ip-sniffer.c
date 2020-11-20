@@ -15,6 +15,7 @@
 #include <linux/skbuff.h>
 #include <stdatomic.h>
 
+// magic number, but have to match which in client
 #define MYGRP 31
 
 MODULE_LICENSE("GPL");
@@ -23,12 +24,10 @@ MODULE_DESCRIPTION("Record source/destination ip address and port as well as pro
 
 
 static char *ip;
-
 module_param(ip, charp, S_IRUGO);
 
-struct sock *nl_sk = NULL;
-
-static struct nf_hook_ops nfho;
+struct sock *nl_sk = NULL;  // netlink socket
+static struct nf_hook_ops nfho;  // netfilter hook ops
 
 
 static void send_to_user(const char *buffer) {
@@ -131,5 +130,4 @@ static void __exit cleanup_main(void) {
 }
 
 module_init(init_main)
-
 module_exit(cleanup_main)
