@@ -70,11 +70,10 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
     if (ip_header->saddr == in_aton(ip)) {
         ++counter;
-        sprintf(output_buffer, "%03d | src_ip: %pI4, dst_ip: %pI4, src_mac: %pM, dst_mac: %pM",
+        sprintf(output_buffer, "%05d | src_ip: %pI4, dst_ip: %pI4, src_mac: %pM, dst_mac: %pM",
                 counter,
                 &ip_header->saddr, &ip_header->daddr,
                 &mac_header->h_source, &mac_header->h_dest);
-
 
 
         switch (ip_header->protocol) {

@@ -9,9 +9,13 @@ sock.bind((0, 0))
 # 270 is SOL_NETLINK and 1 is NETLINK_ADD_MEMBERSHIP
 sock.setsockopt(270, 1, 31)
 
-while True:
-    try:
-        msg, _ = sock.recvfrom(1024)
-        print(msg[16:].decode('utf8'))
-    except socket.error as e:
-        print(e)
+with open("ip.log", 'ab') as f:
+    while True:
+        try:
+            msg, _ = sock.recvfrom(1024)
+            msg_data = msg[16:]
+            f.write(msg[16:])
+            f.write(b'\n')
+        except socket.error as e:
+            print(e)
+            exit(-1)
