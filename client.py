@@ -14,8 +14,9 @@ with open("ip.log", 'ab') as f:
         try:
             msg, _ = sock.recvfrom(1024)
             msg_data = msg[16:]
-            f.write(msg[16:])  # netlink has a header of size 16
+            f.write(msg_data)  # netlink has a header of size 16
             f.write(b'\n')
+            print(msg_data)
         except socket.error as e:
             print(e)
             exit(-1)

@@ -23,9 +23,10 @@ MODULE_AUTHOR("zerol <zerolfx0@gmail.com>");
 MODULE_DESCRIPTION("Record source/destination ip address and port as well as protocol for user-specific ip");
 
 
-static char *ip;
-module_param(ip, charp, S_IRUGO);
+static char *ip_str;
+module_param_named(ip, ip_str, charp, S_IRUGO);
 
+static __be32 ip;  // user specific ip
 struct sock *nl_sk = NULL;  // netlink socket
 static struct nf_hook_ops nfho;  // netfilter hook ops
 
@@ -67,7 +68,7 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
     ip_header = ip_hdr(skb);
     mac_header = eth_hdr(skb);
 
-    if (ip_header->saddr == in_aton(ip)) {
+    if (ip_header->saddr == ip) {
         ++counter;
         sprintf(output_buffer, "%05d | src_ip: %pI4, dst_ip: %pI4, src_mac: %pM, dst_mac: %pM",
                 counter,
@@ -103,9 +104,17 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 static int __init init_main(void) {
     struct net *n;
 
+    if (ip_str == NULL) {
+        pr_err("Please specify ip address using parameter ip.");
+        return 1;
+    }
+
+    ip = in_aton(ip_str);
+
     nl_sk = netlink_kernel_create(&init_net, NETLINK_USERSOCK, NULL);
     if (!nl_sk) {
         pr_err("Error creating socket.\n");
+        return 2;
     }
 
     nfho.hook = hook_func;
@@ -115,6 +124,8 @@ static int __init init_main(void) {
 
     for_each_net(n)
         nf_register_net_hook(n, &nfho);
+
+    pr_info("Module ip-sniffer loaded.");
 
     return 0;
 }
@@ -126,7 +137,11 @@ static void __exit cleanup_main(void) {
     for_each_net(n)
         nf_unregister_net_hook(n, &nfho);
 
-    netlink_kernel_release(nl_sk);
+    if (nl_sk) {
+        netlink_kernel_release(nl_sk);
+    }
+
+    pr_info("Module ip-sniffer removed.");
 }
 
 module_init(init_main)
